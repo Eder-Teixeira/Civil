@@ -3,74 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Civil Pro · Estabilidade Real</title>
+    <title>AR Civil Pro · Estabilidade Total</title>
 
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
     <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
 
     <style>
-        /* 1. REMOVE FAIXAS BRANCAS E PRETAS */
+        /* 1. CORREÇÃO DA TRANSPARÊNCIA */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000; /* Fundo base para evitar flash branco */
+            background-color: transparent !important;
         }
 
-        #ar-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100% !important;
-            height: 100% !important;
+        /* Força o canvas do AR a ser transparente */
+        .a-canvas {
+            background-color: transparent !important;
         }
 
-        /* Força a câmera a ocupar cada pixel da tela */
+        /* Força a câmera a preencher o fundo */
         video {
-            width: 100vw !important;
-            height: 100vh !important;
-            object-fit: cover !important;
             position: fixed !important;
             top: 0;
             left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
+            z-index: -1;
         }
 
-        /* 2. BOTÃO DE FECHAR (FIXO NA TELA) */
-        .btn-exit { 
+        /* 2. CORREÇÃO DO BOTÃO (PARA NÃO TRAVAR) */
+        #btn-fechar { 
             position: fixed; 
-            top: env(safe-area-inset-top, 20px); 
-            right: 20px; 
-            z-index: 999999; /* Máxima prioridade */
-            background: #ff4444; 
+            top: 30px; 
+            right: 30px; 
+            z-index: 999999; /* Valor altíssimo para ficar acima de tudo */
+            background-color: #ff4444; 
             color: white; 
-            border: 2px solid white;
-            width: 50px; 
-            height: 50px; 
+            border: 3px solid #fff;
+            width: 60px; 
+            height: 60px; 
             border-radius: 50%; 
-            font-size: 22px;
+            font-size: 28px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: auto !important; /* Força o clique a funcionar */
+            touch-action: manipulation;
         }
-
-        /* Esconde elementos desnecessários do A-Frame */
-        .a-enter-vr, .a-loader-title { display: none !important; }
     </style>
 </head>
 <body>
 
-    <!-- Botão de Sair com evento de toque forçado -->
-    <button class="btn-exit" onpointerdown="window.location.reload();" onclick="window.location.reload();">✕</button>
+    <!-- Botão de Sair com múltiplos métodos de clique -->
+    <button id="btn-fechar" onclick="fecharJanela()">✕</button>
 
     <div id="ar-container">
         <a-scene 
             embedded 
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; smooth: true; smoothCount: 15; smoothTolerance: 0.02; smoothThreshold: 2;" 
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; smooth: true; smoothCount: 15;" 
             vr-mode-ui="enabled: false"
             renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true;"
             gesture-detector>
@@ -79,7 +76,6 @@
                 <a-asset-item id="modelo" src="edificio_grande.glb"></a-asset-item>
             </a-assets>
 
-            <!-- 3. MARCADOR COM ESTABILIDADE REFORÇADA -->
             <a-marker 
                 preset="hiro" 
                 raycaster="objects: .clickable" 
@@ -87,7 +83,6 @@
                 cursor="fuse: false; rayOrigin: mouse;"
                 id="marker">
                 
-                <!-- O prédio agora é 'clickable' para mover, girar e dar zoom -->
                 <a-entity 
                     id="render-entity"
                     gltf-model="#modelo" 
@@ -103,14 +98,17 @@
     </div>
 
     <script>
-        // Ajuste automático caso o celular mude de posição (evita faixas brancas)
-        window.addEventListener('resize', function() {
-            const video = document.querySelector('video');
-            if(video) {
-                video.style.width = window.innerWidth + 'px';
-                video.style.height = window.innerHeight + 'px';
-            }
-        });
+        // Função para garantir que a tela feche e o vídeo pare
+        function fecharJanela() {
+            // Recarrega a página limpando tudo
+            window.location.href = window.location.href.split('?')[0];
+        }
+
+        // Tenta forçar o clique se o botão for ignorado
+        document.getElementById('btn-fechar').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            fecharJanela();
+        }, false);
     </script>
 </body>
 </html>
