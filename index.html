@@ -3,19 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Civil Pro · Estabilidade Total</title>
+    <title>AR Civil Pro · Estabilidade Real</title>
 
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
     <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
 
     <style>
-        /* 1. TELA CHEIA E TRANSPARÊNCIA */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent; }
-        
-        #ar-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        /* 1. REMOVE FAIXAS BRANCAS E PRETAS */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000; /* Fundo base para evitar flash branco */
+        }
 
-        /* 2. FORÇAR A CÂMERA A APARECER NO FUNDO */
+        #ar-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Força a câmera a ocupar cada pixel da tela */
         video {
             width: 100vw !important;
             height: 100vh !important;
@@ -23,40 +36,50 @@
             position: fixed !important;
             top: 0;
             left: 0;
-            z-index: -2;
         }
 
-        .a-canvas { background-color: transparent !important; }
-
-        /* 3. BOTÃO DE SAIR (CORRIGIDO) */
+        /* 2. BOTÃO DE FECHAR (FIXO NA TELA) */
         .btn-exit { 
-            position: fixed; top: 20px; right: 20px; z-index: 9999;
-            background: #ff4444; color: white; border: none;
-            width: 50px; height: 50px; border-radius: 50%; 
-            font-size: 24px; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            position: fixed; 
+            top: env(safe-area-inset-top, 20px); 
+            right: 20px; 
+            z-index: 999999; /* Máxima prioridade */
+            background: #ff4444; 
+            color: white; 
+            border: 2px solid white;
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        /* Esconde elementos desnecessários do A-Frame */
+        .a-enter-vr, .a-loader-title { display: none !important; }
     </style>
 </head>
-<body style="margin: 0; background-color: transparent;">
+<body>
 
-    <!-- Botão de Sair que recarrega o app -->
-    <button class="btn-exit" onclick="window.location.reload();">✕</button>
+    <!-- Botão de Sair com evento de toque forçado -->
+    <button class="btn-exit" onpointerdown="window.location.reload();" onclick="window.location.reload();">✕</button>
 
     <div id="ar-container">
         <a-scene 
             embedded 
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; smooth: true; smoothCount: 15; smoothTolerance: 0.05; smoothThreshold: 5;" 
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; smooth: true; smoothCount: 15; smoothTolerance: 0.02; smoothThreshold: 2;" 
             vr-mode-ui="enabled: false"
-            renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true; colorManagement: true;"
+            renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true;"
             gesture-detector>
             
             <a-assets>
                 <a-asset-item id="modelo" src="edificio_grande.glb"></a-asset-item>
             </a-assets>
 
-            <!-- Marcador Hiro com suporte a Zoom, Rotação e Arrastar -->
+            <!-- 3. MARCADOR COM ESTABILIDADE REFORÇADA -->
             <a-marker 
                 preset="hiro" 
                 raycaster="objects: .clickable" 
@@ -64,6 +87,7 @@
                 cursor="fuse: false; rayOrigin: mouse;"
                 id="marker">
                 
+                <!-- O prédio agora é 'clickable' para mover, girar e dar zoom -->
                 <a-entity 
                     id="render-entity"
                     gltf-model="#modelo" 
@@ -79,9 +103,13 @@
     </div>
 
     <script>
-        // Garante que o botão de fechar funcione mesmo em celulares travados
-        document.querySelector('.btn-exit').addEventListener('touchstart', function() {
-            window.location.reload();
+        // Ajuste automático caso o celular mude de posição (evita faixas brancas)
+        window.addEventListener('resize', function() {
+            const video = document.querySelector('video');
+            if(video) {
+                video.style.width = window.innerWidth + 'px';
+                video.style.height = window.innerHeight + 'px';
+            }
         });
     </script>
 </body>
