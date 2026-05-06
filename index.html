@@ -3,85 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Civil Pro · Estabilidade Total</title>
+    <title>AR Civil Pro · Foco Total</title>
 
+    <!-- Bibliotecas Essenciais -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
     <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
 
     <style>
-        /* 1. CORREÇÃO DA TRANSPARÊNCIA */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: transparent !important;
+        /* RESET TOTAL PARA ELIMINAR FAIXAS */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: transparent !important; 
         }
 
-        /* Força o canvas do AR a ser transparente */
-        .a-canvas {
-            background-color: transparent !important;
-        }
-
-        /* Força a câmera a preencher o fundo */
-        video {
-            position: fixed !important;
+        #ar-container {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100vw !important;
-            height: 100vh !important;
-            object-fit: cover !important;
-            z-index: -1;
+            width: 100%;
+            height: 100%;
         }
 
-        /* 2. CORREÇÃO DO BOTÃO (PARA NÃO TRAVAR) */
-        #btn-fechar { 
-            position: fixed; 
-            top: 30px; 
-            right: 30px; 
-            z-index: 999999; /* Valor altíssimo para ficar acima de tudo */
-            background-color: #ff4444; 
-            color: white; 
-            border: 3px solid #fff;
-            width: 60px; 
-            height: 60px; 
-            border-radius: 50%; 
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto !important; /* Força o clique a funcionar */
-            touch-action: manipulation;
+        /* Força a câmera a cobrir cada canto da tela do celular */
+        video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
         }
     </style>
 </head>
-<body>
-
-    <!-- Botão de Sair com múltiplos métodos de clique -->
-    <button id="btn-fechar" onclick="fecharJanela()">✕</button>
+<body style="margin: 0px; overflow: hidden;">
 
     <div id="ar-container">
+        <!-- 'alpha: true' é o que deixa a mesa aparecer no fundo -->
         <a-scene 
             embedded 
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; smooth: true; smoothCount: 15;" 
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;" 
             vr-mode-ui="enabled: false"
             renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true;"
             gesture-detector>
             
             <a-assets>
+                <!-- O arquivo que você renomeou no GitHub -->
                 <a-asset-item id="modelo" src="edificio_grande.glb"></a-asset-item>
             </a-assets>
 
+            <!-- Marcador Hiro -->
             <a-marker 
                 preset="hiro" 
                 raycaster="objects: .clickable" 
                 emitevents="true" 
-                cursor="fuse: false; rayOrigin: mouse;"
-                id="marker">
+                cursor="fuse: false; rayOrigin: mouse;">
                 
                 <a-entity 
                     id="render-entity"
@@ -89,7 +66,7 @@
                     scale="1 1 1" 
                     position="0 0 0"
                     class="clickable"
-                    gesture-handler="minScale: 0.1; maxScale: 10;">
+                    gesture-handler>
                 </a-entity>
             </a-marker>
 
@@ -98,17 +75,12 @@
     </div>
 
     <script>
-        // Função para garantir que a tela feche e o vídeo pare
-        function fecharJanela() {
-            // Recarrega a página limpando tudo
-            window.location.href = window.location.href.split('?')[0];
-        }
-
-        // Tenta forçar o clique se o botão for ignorado
-        document.getElementById('btn-fechar').addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            fecharJanela();
-        }, false);
+        // Esse pequeno ajuste ajuda a "acordar" a câmera no celular e tirar as faixas
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 1000);
+        });
     </script>
 </body>
 </html>
