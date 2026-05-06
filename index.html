@@ -3,61 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Civil Pro · Tela Cheia</title>
+    <title>AR Civil Pro · Estabilidade Total</title>
 
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
-    <!-- Biblioteca extra para Gestos (Zoom e Rotação) -->
     <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
 
     <style>
-        /* CORREÇÃO DAS FAIXAS: Força 100% da tela */
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
-            background-color: #000; 
-        }
+        /* 1. TELA CHEIA E TRANSPARÊNCIA */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent; }
+        
+        #ar-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
 
-        #ar-container {
-            width: 100%;
-            height: 100%;
-        }
-
+        /* 2. FORÇAR A CÂMERA A APARECER NO FUNDO */
         video {
             width: 100vw !important;
             height: 100vh !important;
-            margin: 0 !important;
-            object-fit: cover !important; /* Preenche a tela toda sem faixas */
+            object-fit: cover !important;
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            z-index: -2;
         }
 
+        .a-canvas { background-color: transparent !important; }
+
+        /* 3. BOTÃO DE SAIR (CORRIGIDO) */
         .btn-exit { 
-            position: fixed; top: 10px; right: 10px; z-index: 1000;
-            background: rgba(255,0,0,0.7); color: white; border: none;
-            width: 40px; height: 40px; border-radius: 50%; font-weight: bold;
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            background: #ff4444; color: white; border: none;
+            width: 50px; height: 50px; border-radius: 50%; 
+            font-size: 24px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
     </style>
 </head>
-<body style="margin: 0;">
+<body style="margin: 0; background-color: transparent;">
 
-    <button class="btn-exit" onclick="location.reload()">✕</button>
+    <!-- Botão de Sair que recarrega o app -->
+    <button class="btn-exit" onclick="window.location.reload();">✕</button>
 
     <div id="ar-container">
-        <!-- 'gesture-detector' ativa o controle por dedos -->
         <a-scene 
             embedded 
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; smooth: true; smoothCount: 10;" 
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; smooth: true; smoothCount: 15; smoothTolerance: 0.05; smoothThreshold: 5;" 
             vr-mode-ui="enabled: false"
-            renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true;"
+            renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true; colorManagement: true;"
             gesture-detector>
             
             <a-assets>
                 <a-asset-item id="modelo" src="edificio_grande.glb"></a-asset-item>
             </a-assets>
 
-            <!-- Marcador Hiro com detecção de gestos -->
+            <!-- Marcador Hiro com suporte a Zoom, Rotação e Arrastar -->
             <a-marker 
                 preset="hiro" 
                 raycaster="objects: .clickable" 
@@ -71,12 +70,19 @@
                     scale="1 1 1" 
                     position="0 0 0"
                     class="clickable"
-                    gesture-handler="minScale: 0.25; maxScale: 10;">
+                    gesture-handler="minScale: 0.1; maxScale: 10;">
                 </a-entity>
             </a-marker>
 
             <a-entity camera></a-entity>
         </a-scene>
     </div>
+
+    <script>
+        // Garante que o botão de fechar funcione mesmo em celulares travados
+        document.querySelector('.btn-exit').addEventListener('touchstart', function() {
+            window.location.reload();
+        });
+    </script>
 </body>
 </html>
