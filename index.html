@@ -3,185 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Civil Pro · Estabilidade Total</title>
+    <title>AR Civil Pro · Realidade Aumentada</title>
 
-    <!-- Bibliotecas AR -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=JetBrains+Mono&display=swap');
+        /* 1. FORÇAR TRANSPARÊNCIA TOTAL */
+        body, html { margin: 0; overflow: hidden; width: 100%; height: 100%; background-color: transparent; }
 
-        :root {
-            --cyan: #00e5ff;
-            --bg: #070b14;
-            --surface: #0d1526;
-            --text: #deeeff;
-        }
-
-        /* RESET PARA NÃO ESPARRAMAR */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Rajdhani', sans-serif;
-            overflow: hidden; /* Trava o scroll da tela */
-        }
-
-        /* --- DASHBOARD --- */
-        #dashboard { 
-            position: relative;
-            z-index: 10;
-            padding: 20px; 
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            background: var(--bg);
-        }
-        
-        .header { 
-            border-bottom: 1px solid rgba(0,229,255,0.2); 
-            padding-bottom: 15px; 
-            margin-bottom: 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-
-        .header h1 { color: var(--cyan); margin: 0; font-size: 1.4rem; }
-
-        .card-obra {
-            background: var(--surface); 
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px; 
-            padding: 20px; 
-            margin-bottom: 15px;
-            width: 100%;
-        }
-
-        .actions { display: flex; gap: 10px; margin-top: 15px; }
-        
-        .btn { 
-            border: none; 
-            border-radius: 8px; 
-            font-family: 'Rajdhani'; 
-            font-weight: 700; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 48px;
-            transition: 0.3s;
-        }
-
-        .btn-inspect { background: var(--cyan); color: #000; flex: 1; }
-        .btn-exit { 
-            position: fixed; top: 20px; right: 20px; z-index: 1000;
-            background: #ff4444; color: white; width: 45px; height: 45px; 
-            border-radius: 50%; font-size: 20px; pointer-events: all;
-            display: none;
-        }
-
-        /* CORREÇÃO DO VÍDEO DA CÂMERA */
-        #ar-container { display: none; width: 100%; height: 100%; }
-        
-        /* Força a câmera a preencher o fundo sem deformar */
+        /* 2. GARANTIR QUE O VÍDEO DA CÂMERA APAREÇA NO FUNDO */
         video {
+            position: fixed !important;
+            top: 0;
+            left: 0;
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
-            position: absolute;
-            top: 0;
-            left: 0;
+            z-index: -1; /* Joga a câmera para trás de tudo */
+        }
+
+        .a-canvas { background-color: transparent !important; }
+
+        /* Interface do Usuário (Botão Sair) */
+        .btn-exit { 
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            background: #ff4444; color: white; width: 45px; height: 45px; 
+            border-radius: 50%; border: none; font-weight: bold;
+        }
+        
+        #dashboard { 
+            position: absolute; z-index: 100; background: #070b14; 
+            width: 100%; height: 100%; padding: 20px; color: white; font-family: sans-serif;
         }
     </style>
 </head>
-<body>
+<body style="margin: 0; overflow: hidden;">
 
-    <!-- Botão de Sair fixo para quando o AR estiver ativo -->
-    <button id="btn-fechar" class="btn btn-exit" onclick="fecharAR()">✕</button>
-
-    <!-- DASHBOARD PRINCIPAL -->
     <div id="dashboard">
-        <div class="header">
-            <div>
-                <h1>AR CIVIL PRO</h1>
-                <p style="font-size: 0.7rem; color: #8899af; margin:0;">MODELAGEM 3D DE ESTRUTURAS</p>
-            </div>
-        </div>
-
-        <div id="lista-projetos">
-            <!-- Os cards aparecerão aqui -->
-        </div>
+        <h1>AR CIVIL PRO</h1>
+        <p>Edifício Alpha - Estrutural</p>
+        <button style="padding: 15px; background: #00e5ff; border: none; border-radius: 8px; font-weight: bold;" 
+                onclick="iniciarAR()">MIRAR PROJETO NA MESA</button>
     </div>
 
-    <!-- CENA DE REALIDADE AUMENTADA -->
-    <div id="ar-container">
-        <!-- Ajustado para forçar a câmera traseira (environment) -->
-        <a-scene embedded 
-                 arjs="sourceType: webcam; videoParameters: { facingMode: 'environment' }; debugUIEnabled: false;" 
-                 renderer="logarithmicDepthBuffer: true; antialias: true; precision: medium;">
-            
-            <a-assets>
-                <a-asset-item id="modelo-glb" src="edificio_grande.glb"></a-asset-item>
-            </a-assets>
+    <button id="btn-sair" class="btn-exit" style="display:none;" onclick="location.reload()">✕</button>
 
-            <!-- Marcador Hiro Padrão -->
-            <a-marker preset="hiro">
-                <a-entity 
-                    id="render-entity"
-                    gltf-model="#modelo-glb" 
-                    scale="0.05 0.05 0.05" 
-                    position="0 0 0" 
-                    rotation="0 0 0">
-                </a-entity>
-            </a-marker>
-            
-            <a-entity camera></a-entity>
-        </a-scene>
-    </div>
+    <!-- 3. CONFIGURAÇÃO DA CENA PARA TRANSPARÊNCIA -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false;" 
+        vr-mode-ui="enabled: false"
+        renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true;">
+        
+        <a-assets>
+            <a-asset-item id="modelo" src="edificio_grande.glb"></a-asset-item>
+        </a-assets>
+
+        <a-marker preset="hiro">
+            <!-- Escala 1.5 para ele ficar grande na mesa -->
+            <a-entity 
+                gltf-model="#modelo" 
+                scale="1.5 1.5 1.5" 
+                position="0 0 0">
+            </a-entity>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
 
     <script>
-        // Banco de dados local
-        let dbProjetos = JSON.parse(localStorage.getItem('obras_ar')) || [
-            { id: 1, nome: "Edifício Alpha", arquivo: "edificio_grande.glb" }
-        ];
-
-        function renderizar() {
-            const container = document.getElementById('lista-projetos');
-            container.innerHTML = dbProjetos.map(p => `
-                <div class="card-obra">
-                    <h3>${p.nome}</h3>
-                    <p style="font-family: 'JetBrains Mono'; font-size: 0.8rem; color: #8899af;">${p.arquivo}</p>
-                    <div class="actions">
-                        <button class="btn btn-inspect" onclick="abrirAR('${p.arquivo}')">MIRAR PROJETO</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function abrirAR(file) {
+        function iniciarAR() {
             document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('ar-container').style.display = 'block';
-            document.getElementById('btn-fechar').style.display = 'flex';
-            
-            // Recarrega o modelo caso tenha mudado
-            const model = document.getElementById('modelo-glb');
-            model.setAttribute('src', file);
+            document.getElementById('btn-sair').style.display = 'block';
         }
-
-        function fecharAR() {
-            // Reinicia a página para limpar a memória da câmera e do 3D
-            window.location.reload();
-        }
-
-        // Inicia o app
-        renderizar();
     </script>
 </body>
 </html>
