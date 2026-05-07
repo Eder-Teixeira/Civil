@@ -477,20 +477,34 @@
         const file = input.files[0];
         if (!file) return;
 
-        // Limpa URL anterior
-        if (modelURL) URL.revokeObjectURL(modelURL);
-
-        modelURL  = URL.createObjectURL(file);
         modelName = file.name;
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
 
-        // Atualiza UI da preview
-        document.getElementById('preview-icon').textContent   = '✅';
+        // Atualiza UI para "carregando"
+        document.getElementById('preview-icon').textContent   = '⏳';
         document.getElementById('preview-name').textContent   = file.name;
-        document.getElementById('preview-status').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB · pronto para AR`;
-        document.getElementById('preview-status').style.color = '#00e676';
-        document.getElementById('btn-start').disabled         = false;
+        document.getElementById('preview-status').textContent = `Lendo arquivo (${sizeMB} MB)...`;
+        document.getElementById('preview-status').style.color = '#ffab40';
+        document.getElementById('btn-start').disabled         = true;
 
-        input.value = ''; // permite reabrir o mesmo arquivo
+        // ✅ Lê como base64 (data URL) — funciona em qualquer browser mobile
+        // Blob URLs falham silenciosamente no Chrome/Safari mobile para GLB
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            modelURL = e.target.result;
+            document.getElementById('preview-icon').textContent   = '✅';
+            document.getElementById('preview-status').textContent = `${sizeMB} MB · pronto para AR`;
+            document.getElementById('preview-status').style.color = '#00e676';
+            document.getElementById('btn-start').disabled         = false;
+        };
+        reader.onerror = () => {
+            document.getElementById('preview-icon').textContent   = '❌';
+            document.getElementById('preview-status').textContent = 'Erro ao ler arquivo';
+            document.getElementById('preview-status').style.color = '#f38ba8';
+        };
+        reader.readAsDataURL(file);
+
+        input.value = '';
     }
 
     // ══════════════════════════════════════
