@@ -12,7 +12,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ✅ Fundo transparente — o vídeo da câmera precisa aparecer */
         html, body {
             width: 100%;
             height: 100%;
@@ -20,32 +19,26 @@
             background: transparent !important;
         }
 
-        /* ✅ Vídeo da câmera (injetado pelo AR.js) cobre a tela toda */
-        video {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            z-index: 0;
-        }
-
-        /* ✅ Canvas do A-Frame fica por cima, mas com fundo transparente */
+        /* Cobre qualquer container que o AR.js criar para o vídeo */
+        video,
+        #arjs-video,
+        .a-canvas,
         canvas {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 1;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
             background: transparent !important;
         }
+
+        video { z-index: 0; }
+        canvas { z-index: 1; }
     </style>
 </head>
 <body>
 
-    <!-- ✅ SEM "embedded": AR.js assume o controle total do layout -->
     <a-scene
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
         vr-mode-ui="enabled: false"
@@ -77,12 +70,46 @@
     </a-scene>
 
     <script>
-        // Garante resize após a câmera inicializar
+        // ✅ Intercepta o vídeo assim que o AR.js o injeta no DOM
+        // e força as dimensões corretas da tela do celular
+        function fixVideoSize() {
+            const videos = document.querySelectorAll('video');
+            videos.forEach(v => {
+                v.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    object-fit: cover !important;
+                    z-index: 0 !important;
+                `;
+                // Remove atributos width/height que o AR.js seta inline
+                v.removeAttribute('width');
+                v.removeAttribute('height');
+            });
+        }
+
+        // Roda em múltiplos momentos porque o AR.js injeta o vídeo de forma assíncrona
         window.addEventListener('load', () => {
-            [500, 1000, 2000].forEach(t =>
-                setTimeout(() => window.dispatchEvent(new Event('resize')), t)
+            [200, 500, 1000, 2000].forEach(t =>
+                setTimeout(() => {
+                    fixVideoSize();
+                    window.dispatchEvent(new Event('resize'));
+                }, t)
             );
         });
+
+        // ✅ MutationObserver: detecta exatamente quando o AR.js adiciona o vídeo ao DOM
+        const observer = new MutationObserver(() => {
+            const video = document.querySelector('video');
+            if (video) {
+                fixVideoSize();
+                observer.disconnect(); // Para de observar depois de corrigir
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
     </script>
 </body>
 </html>
