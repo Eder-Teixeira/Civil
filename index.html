@@ -325,7 +325,7 @@
             min-height: 100vh !important;
             width: auto !important;
             height: auto !important;
-            transform: translate(-50%, -50%) scaleX(-1) !important;
+            transform: translate(-50%, -50%) !important;
             object-fit: cover !important;
             z-index: 0 !important;
             background: transparent !important;
@@ -499,9 +499,33 @@
     function startAR() {
         if (!modelURL) return;
 
-        // Aplica modelo à entidade via atributo direto
+        // ✅ A-Frame exige o formato url() para carregar blob URLs dinâmicos
         const entity = document.getElementById('render-entity');
-        entity.setAttribute('gltf-model', modelURL);
+
+        // Remove qualquer modelo anterior para forçar recarga
+        entity.removeAttribute('gltf-model');
+
+        // Injeta asset dinamicamente nos <a-assets>
+        const assets = document.getElementById('ar-assets');
+        const oldItem = document.getElementById('modelo-dinamico');
+        if (oldItem) oldItem.remove();
+
+        const assetItem = document.createElement('a-asset-item');
+        assetItem.setAttribute('id', 'modelo-dinamico');
+        assetItem.setAttribute('src', modelURL);
+        assets.appendChild(assetItem);
+
+        // Aguarda o asset carregar antes de atribuir ao entity
+        assetItem.addEventListener('loaded', () => {
+            entity.setAttribute('gltf-model', '#modelo-dinamico');
+        });
+
+        // Fallback: se o evento 'loaded' não disparar, tenta direto com url()
+        setTimeout(() => {
+            if (!entity.getAttribute('gltf-model')) {
+                entity.setAttribute('gltf-model', `url(${modelURL})`);
+            }
+        }, 3000);
 
         // Transição para modo AR
         document.getElementById('menu').classList.add('hidden');
