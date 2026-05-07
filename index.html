@@ -451,10 +451,14 @@
 
         <a-entity
             id="render-entity"
+            visible="true"
             scale="1 1 1"
             position="0 0 0"
+            rotation="0 0 0"
             class="clickable"
             gesture-handler>
+            <!-- Caixa de debug — mostra se a entidade está renderizando -->
+            <a-box id="debug-box" position="0 0 0" scale="0.1 0.1 0.1" color="#ff0000" opacity="0.7"></a-box>
         </a-entity>
 
     </a-marker>
@@ -480,29 +484,20 @@
         modelName = file.name;
         const sizeMB = (file.size / 1024 / 1024).toFixed(2);
 
-        // Atualiza UI para "carregando"
-        document.getElementById('preview-icon').textContent   = '⏳';
-        document.getElementById('preview-name').textContent   = file.name;
-        document.getElementById('preview-status').textContent = `Lendo arquivo (${sizeMB} MB)...`;
-        document.getElementById('preview-status').style.color = '#ffab40';
-        document.getElementById('btn-start').disabled         = true;
+        // ✅ Usa blob URL — é mais rápido e funciona melhor no mobile que base64
+        // URL.createObjectURL cria uma referência em memória, sem precisar converter
+        if (modelURL) URL.revokeObjectURL(modelURL); // limpa anterior
+        
+        modelURL = URL.createObjectURL(file);
 
-        // ✅ Lê como base64 (data URL) — funciona em qualquer browser mobile
-        // Blob URLs falham silenciosamente no Chrome/Safari mobile para GLB
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            modelURL = e.target.result;
-            document.getElementById('preview-icon').textContent   = '✅';
-            document.getElementById('preview-status').textContent = `${sizeMB} MB · pronto para AR`;
-            document.getElementById('preview-status').style.color = '#00e676';
-            document.getElementById('btn-start').disabled         = false;
-        };
-        reader.onerror = () => {
-            document.getElementById('preview-icon').textContent   = '❌';
-            document.getElementById('preview-status').textContent = 'Erro ao ler arquivo';
-            document.getElementById('preview-status').style.color = '#f38ba8';
-        };
-        reader.readAsDataURL(file);
+        // Atualiza UI
+        document.getElementById('preview-icon').textContent   = '✅';
+        document.getElementById('preview-name').textContent   = file.name;
+        document.getElementById('preview-status').textContent = `${sizeMB} MB · pronto para AR`;
+        document.getElementById('preview-status').style.color = '#00e676';
+        document.getElementById('btn-start').disabled         = false;
+
+        console.log('[AR Civil] Modelo carregado:', file.name, '|', modelURL);
 
         input.value = '';
     }
@@ -511,19 +506,27 @@
     // INICIAR AR
     // ══════════════════════════════════════
     function startAR() {
-        if (!modelURL) return;
+        if (!modelURL) {
+            console.error('[AR Civil] modelURL está vazio!');
+            return;
+        }
 
         const entity = document.getElementById('render-entity');
 
-        // ✅ Método mais direto e confiável do A-Frame para blob URLs dinâmicos
-        // Não usa <a-assets> — passa url() direto no componente gltf-model
-        entity.removeAttribute('gltf-model');
-
-        // Pequeno delay garante que o removeAttribute processou antes de setar
-        setTimeout(() => {
-            entity.setAttribute('gltf-model', `url(${modelURL})`);
-            console.log('[AR Civil] gltf-model definido:', modelURL);
-        }, 100);
+        console.log('[AR Civil] Iniciando AR com modelo:', modelURL);
+        
+        // Aguarda um frame para garantir que tudo está pronto
+        requestAnimationFrame(() => {
+            entity.setAttribute('gltf-model', modelURL);
+            console.log('[AR Civil] setAttribute gltf-model executado');
+            
+            // Log do estado atual
+            setTimeout(() => {
+                console.log('[AR Civil] Visível?', entity.getAttribute('visible'));
+                console.log('[AR Civil] Modelo?', entity.getAttribute('gltf-model'));
+                console.log('[AR Civil] Escala?', entity.getAttribute('scale'));
+            }, 100);
+        });
 
         // Transição para modo AR
         document.getElementById('menu').classList.add('hidden');
