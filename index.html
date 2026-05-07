@@ -499,33 +499,17 @@
     function startAR() {
         if (!modelURL) return;
 
-        // ✅ A-Frame exige o formato url() para carregar blob URLs dinâmicos
         const entity = document.getElementById('render-entity');
 
-        // Remove qualquer modelo anterior para forçar recarga
+        // ✅ Método mais direto e confiável do A-Frame para blob URLs dinâmicos
+        // Não usa <a-assets> — passa url() direto no componente gltf-model
         entity.removeAttribute('gltf-model');
 
-        // Injeta asset dinamicamente nos <a-assets>
-        const assets = document.getElementById('ar-assets');
-        const oldItem = document.getElementById('modelo-dinamico');
-        if (oldItem) oldItem.remove();
-
-        const assetItem = document.createElement('a-asset-item');
-        assetItem.setAttribute('id', 'modelo-dinamico');
-        assetItem.setAttribute('src', modelURL);
-        assets.appendChild(assetItem);
-
-        // Aguarda o asset carregar antes de atribuir ao entity
-        assetItem.addEventListener('loaded', () => {
-            entity.setAttribute('gltf-model', '#modelo-dinamico');
-        });
-
-        // Fallback: se o evento 'loaded' não disparar, tenta direto com url()
+        // Pequeno delay garante que o removeAttribute processou antes de setar
         setTimeout(() => {
-            if (!entity.getAttribute('gltf-model')) {
-                entity.setAttribute('gltf-model', `url(${modelURL})`);
-            }
-        }, 3000);
+            entity.setAttribute('gltf-model', `url(${modelURL})`);
+            console.log('[AR Civil] gltf-model definido:', modelURL);
+        }, 100);
 
         // Transição para modo AR
         document.getElementById('menu').classList.add('hidden');
@@ -559,6 +543,17 @@
         renderEntity.setAttribute('visible', 'true');
         statusText.textContent = '✓ Marcador detectado';
         document.querySelector('.status-dot').style.background = '#00e676';
+        console.log('[AR Civil] Marcador Hiro encontrado!');
+    });
+
+    // Loga quando o modelo GLB termina de carregar
+    renderEntity.addEventListener('model-loaded', () => {
+        console.log('[AR Civil] Modelo 3D carregado com sucesso!');
+        statusText.textContent = 'Modelo carregado · aponte para Hiro';
+    });
+    renderEntity.addEventListener('model-error', (e) => {
+        console.error('[AR Civil] Erro ao carregar modelo:', e.detail);
+        statusText.textContent = '⚠ Erro ao carregar modelo';
     });
 
     // Quando perde o marcador: mantém o modelo na última posição
