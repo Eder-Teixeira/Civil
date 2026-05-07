@@ -12,32 +12,15 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        /* ✅ Fundo transparente — o vídeo da câmera precisa aparecer */
         html, body {
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: #000;
+            background: transparent !important;
         }
 
-        /* ✅ CORREÇÃO PRINCIPAL: forçar a-scene a ocupar tudo */
-        a-scene {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        /* ✅ Canvas gerado pelo A-Frame também precisa cobrir tudo */
-        canvas {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        /* ✅ Vídeo da câmera cobre sem distorcer */
+        /* ✅ Vídeo da câmera (injetado pelo AR.js) cobre a tela toda */
         video {
             position: fixed !important;
             top: 0 !important;
@@ -45,16 +28,29 @@
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
+            z-index: 0;
+        }
+
+        /* ✅ Canvas do A-Frame fica por cima, mas com fundo transparente */
+        canvas {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 1;
+            background: transparent !important;
         }
     </style>
 </head>
 <body>
 
+    <!-- ✅ SEM "embedded": AR.js assume o controle total do layout -->
     <a-scene
-        embedded
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
         vr-mode-ui="enabled: false"
-        renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true;"
+        renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true; clearColor: 0 0 0 0;"
+        background="transparent: true"
         gesture-detector>
 
         <a-assets>
@@ -81,7 +77,7 @@
     </a-scene>
 
     <script>
-        // ✅ Dispara resize após carregar E após AR.js inicializar a câmera
+        // Garante resize após a câmera inicializar
         window.addEventListener('load', () => {
             [500, 1000, 2000].forEach(t =>
                 setTimeout(() => window.dispatchEvent(new Event('resize')), t)
