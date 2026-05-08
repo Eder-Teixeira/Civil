@@ -3,110 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Test AR - Debug</title>
+    <title>AR Civil Pro</title>
+
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
+    <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        * { margin: 0; padding: 0; }
-        body { width: 100%; height: 100%; overflow: hidden; font-family: Arial; }
-        
-        #info {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan: #00e5ff;
+            --green: #00e676;
+            --bg: #080c14;
+            --text: #cdd6f4;
+            --muted: #45475a;
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            font-family: 'Rajdhani', sans-serif;
+            color: var(--text);
+        }
+
+        /* MENU */
+        #menu {
+            position: fixed; inset: 0;
+            z-index: 200;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            padding: 40px 24px;
+            overflow-y: auto;
+            transition: opacity 0.3s;
+        }
+        #menu.hidden { opacity: 0; pointer-events: none; }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo { font-size: 40px; margin-bottom: 10px; }
+        .title { font-size: 20px; font-weight: 700; margin-bottom: 5px; }
+        .subtitle { font-size: 12px; color: var(--muted); }
+
+        .section-label {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-start {
+            border-color: rgba(0,230,118,0.3);
+            background: rgba(0,230,118,0.07);
+            margin-top: 10px;
+        }
+
+        .preview {
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            background: rgba(0,229,255,0.05);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .preview-title { font-weight: 700; margin-bottom: 8px; }
+        .preview-file { color: var(--green); }
+
+        /* LOG DE ERROS */
+        #error-log {
+            display: none;
             position: fixed;
-            top: 20px;
-            left: 20px;
+            bottom: 20px;
+            right: 20px;
             z-index: 999;
-            background: rgba(0,0,0,0.8);
-            color: #0f0;
-            padding: 20px;
+            background: rgba(200,0,0,0.9);
+            border: 2px solid #ff4444;
             border-radius: 8px;
-            font-size: 14px;
+            padding: 15px;
+            color: #fff;
+            max-width: 300px;
+            font-size: 12px;
             font-family: 'Courier New', monospace;
-            max-width: 90vw;
-            line-height: 1.8;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #error-log.show { display: block; }
+
+        /* AR MODE */
+        #back-btn {
+            position: fixed;
+            top: 20px; left: 20px;
+            z-index: 150;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(8,12,20,0.8);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        #back-btn.visible { display: flex; }
+        #back-btn:active { transform: scale(0.9); }
+
+        #ar-status {
+            position: fixed;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 150;
+            background: rgba(8,12,20,0.85);
+            border: 1px solid var(--cyan);
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--cyan);
+            display: none;
+        }
+        #ar-status.visible { display: block; }
+
+        /* VIDEO FIX */
+        video {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            min-width: 100vw !important;
+            min-height: 100vh !important;
+            width: auto !important;
+            height: auto !important;
+            transform: translate(-50%, -50%) !important;
+            object-fit: cover !important;
+            z-index: 0 !important;
+        }
+
+        canvas {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 1 !important;
         }
     </style>
 </head>
 <body>
 
-<div id="info">
-    <strong>🔧 TEST AR DEBUG</strong><br>
-    Status: <span id="status">Carregando...</span><br>
-    Câmera: <span id="camera-status">?</span><br>
-    A-Frame: <span id="aframe-status">?</span><br>
-    Marcador: <span id="marker-status">❌ Não detectado</span><br>
-    <br>
-    <button onclick="location.reload()" style="padding: 10px; background: #0f0; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">↻ Recarregar</button>
+<!-- ════════ MENU ════════ -->
+<div id="menu">
+    <div class="header">
+        <div class="logo">🏗️</div>
+        <div class="title">AR CIVIL</div>
+        <div class="subtitle">Realidade Aumentada · Projetos 3D</div>
+    </div>
+
+    <div class="preview" id="preview">
+        <div class="preview-title">📦 Modelo carregado</div>
+        <div class="preview-file" id="model-name">Nenhum arquivo</div>
+    </div>
+
+    <div class="section-label">📂 Selecionar modelo</div>
+    <button class="btn" onclick="document.getElementById('file-input').click()">
+        📁 Buscar GLB / GLTF do celular
+    </button>
+
+    <button class="btn btn-start" id="btn-start" disabled onclick="startAR()">
+        📷 Iniciar Realidade Aumentada
+    </button>
+
+    <input type="file" id="file-input" accept=".glb,.gltf" style="display:none;">
 </div>
 
-<!-- CENA ULTRA SIMPLES -->
-<a-scene 
+<!-- ════════ LOG DE ERROS ════════ -->
+<div id="error-log"></div>
+
+<!-- ════════ AR ════════ -->
+<button id="back-btn" onclick="goBack()">←</button>
+<div id="ar-status">⏳ Procurando marcador Hiro...</div>
+
+<!-- ════════ CENA A-FRAME ════════ -->
+<a-scene
     arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
     vr-mode-ui="enabled: false"
     renderer="alpha: true;"
-    id="scene">
+    id="ar-scene">
 
-    <!-- Marcador Hiro com APENAS uma caixa vermelha -->
-    <a-marker preset="hiro" id="marker">
-        <a-box position="0 0 0" scale="0.1 0.1 0.1" color="red"></a-box>
+    <a-marker preset="hiro" id="hiro-marker" emitevents="true">
+        <!-- Caixa vermelha de teste — SEMPRE aparece para confirmar que funciona -->
+        <a-box id="test-box" position="0 0 0" scale="0.05 0.05 0.05" color="red"></a-box>
+        
+        <!-- O modelo GLB carregado dinamicamente vai aqui -->
+        <a-entity id="model-entity" scale="1 1 1" position="0 0 0"></a-entity>
     </a-marker>
 
     <a-entity camera></a-entity>
 </a-scene>
 
 <script>
-    // Log status
-    function updateStatus(field, value) {
-        const el = document.getElementById(field + '-status');
-        if (el) el.textContent = value;
-    }
+    let modelURL = null;
+    let modelFile = null;
 
-    // Verifica se A-Frame carregou
-    if (window.AFRAME) {
-        updateStatus('aframe', '✅ OK');
-    } else {
-        updateStatus('aframe', '❌ Erro');
-    }
+    // ════════ CARREGAMENTO DO MODELO ════════
+    document.getElementById('file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    // Aguarda a cena carregar
-    const scene = document.getElementById('scene');
-    
-    scene.addEventListener('loaded', () => {
-        console.log('[TEST] Cena carregada');
-        updateStatus('status', '✅ Cena pronta');
+        modelFile = file;
+        modelURL = URL.createObjectURL(file);
+
+        log(`Arquivo selecionado: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+
+        document.getElementById('model-name').textContent = file.name;
+        document.getElementById('btn-start').disabled = false;
+
+        e.target.value = '';
     });
 
-    // Procura pelo marcador
-    const marker = document.getElementById('marker');
-    
+    // ════════ INICIAR AR ════════
+    function startAR() {
+        if (!modelURL) {
+            log('❌ Nenhum modelo selecionado');
+            return;
+        }
+
+        log('Iniciando AR com:', modelURL.substring(0, 60) + '...');
+
+        // Esconde menu
+        document.getElementById('menu').classList.add('hidden');
+        document.getElementById('back-btn').classList.add('visible');
+        document.getElementById('ar-status').classList.add('visible');
+
+        // Aguarda um frame para garantir que A-Frame processou
+        requestAnimationFrame(() => {
+            const entity = document.getElementById('model-entity');
+            
+            // Remove qualquer modelo anterior
+            entity.removeAttribute('gltf-model');
+            
+            // Aguarda o próximo frame antes de setar
+            requestAnimationFrame(() => {
+                entity.setAttribute('gltf-model', modelURL);
+                log('✓ gltf-model setAttribute executado');
+                
+                // Verifica o estado
+                setTimeout(() => {
+                    const gltf = entity.getAttribute('gltf-model');
+                    log('Modelo setado como:', gltf ? 'OK' : 'FALHOU');
+                }, 200);
+            });
+        });
+
+        // Corrige vídeo
+        [200, 600, 1200, 2500].forEach(t => setTimeout(fixVideo, t));
+    }
+
+    // ════════ VOLTAR ════════
+    function goBack() {
+        document.getElementById('menu').classList.remove('hidden');
+        document.getElementById('back-btn').classList.remove('visible');
+        document.getElementById('ar-status').classList.remove('visible');
+    }
+
+    // ════════ FIX DE VÍDEO ════════
+    function fixVideo() {
+        document.querySelectorAll('video').forEach(v => {
+            v.removeAttribute('width');
+            v.removeAttribute('height');
+        });
+    }
+
+    // ════════ MARCADOR ════════
+    const marker = document.getElementById('hiro-marker');
+    const arStatus = document.getElementById('ar-status');
+
     marker.addEventListener('markerFound', () => {
-        console.log('[TEST] Marcador Hiro ENCONTRADO!');
-        updateStatus('marker', '✅ DETECTADO');
-        updateStatus('status', '✅✅ FUNCIONANDO!');
-        document.getElementById('info').style.background = 'rgba(0,0,0,0.8)';
+        arStatus.textContent = '✓ Marcador detectado!';
+        log('✓ Marcador Hiro encontrado');
     });
 
     marker.addEventListener('markerLost', () => {
-        console.log('[TEST] Marcador perdido');
-        updateStatus('marker', '❌ Perdido');
+        arStatus.textContent = '⏳ Procurando marcador...';
+        log('⚠ Marcador perdido');
     });
 
-    // Verifica permissão de câmera
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-        .then(() => {
-            updateStatus('camera', '✅ OK');
-        })
-        .catch(err => {
-            updateStatus('camera', '❌ ' + err.name);
-        });
+    // ════════ MODELO GLB ════════
+    const modelEntity = document.getElementById('model-entity');
+    
+    modelEntity.addEventListener('model-loaded', () => {
+        log('✅ MODELO CARREGADO COM SUCESSO!');
+        arStatus.textContent = '✓ Modelo carregado · Aponte para Hiro';
+    });
 
-    // Log de erros
+    modelEntity.addEventListener('model-error', (e) => {
+        const err = e.detail?.error?.message || 'Erro desconhecido';
+        log('❌ ERRO AO CARREGAR MODELO: ' + err);
+        arStatus.textContent = '❌ Erro ao carregar modelo';
+    });
+
+    // ════════ LOG SYSTEM ════════
+    function log(msg) {
+        console.log('[AR CIVIL]', msg);
+        
+        const errorLog = document.getElementById('error-log');
+        const timestamp = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.textContent = `[${timestamp}] ${msg}`;
+        errorLog.appendChild(line);
+        errorLog.classList.add('show');
+        
+        // Scroll para o final
+        errorLog.scrollTop = errorLog.scrollHeight;
+        
+        // Limita a 10 linhas
+        const lines = errorLog.querySelectorAll('div');
+        if (lines.length > 10) {
+            lines[0].remove();
+        }
+    }
+
+    // ════════ ERROS GLOBAIS ════════
     window.addEventListener('error', (e) => {
-        console.error('[TEST ERROR]', e.error);
-        updateStatus('status', '❌ ' + e.error.message.substring(0, 30));
+        log('❌ ' + (e.message || e.error));
     });
 
-    console.log('[TEST] Script rodando');
-    updateStatus('status', '⏳ Aguardando câmera...');
+    console.log('AR Civil carregado');
+    log('App iniciada · Selecione um modelo GLB');
 </script>
 
 </body>
