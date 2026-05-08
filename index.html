@@ -3,657 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Civil Pro</title>
-
+    <title>Test AR - Debug</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
-    <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --cyan: #00e5ff;
-            --cyan-dark: #0097a7;
-            --green: #00e676;
-            --bg: #080c14;
-            --bg2: #0d1421;
-            --surface: rgba(255,255,255,0.04);
-            --border: rgba(0,229,255,0.18);
-            --text: #cdd6f4;
-            --muted: #45475a;
-        }
-
-        html, body {
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background: var(--bg);
-            font-family: 'Rajdhani', sans-serif;
-            color: var(--text);
-        }
-
-        /* ── TELA PRINCIPAL ── */
-        #menu {
-            position: fixed; inset: 0;
-            z-index: 200;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0 24px 32px;
-            overflow-y: auto;
-            transition: opacity 0.4s, transform 0.4s;
-        }
-        #menu.hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(-20px);
-        }
-
-        /* Grid de fundo decorativo */
-        #menu::before {
-            content: '';
+        * { margin: 0; padding: 0; }
+        body { width: 100%; height: 100%; overflow: hidden; font-family: Arial; }
+        
+        #info {
             position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .menu-inner {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* ── HEADER ── */
-        .header {
-            width: 100%;
-            padding: 48px 0 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .logo-badge {
-            width: 72px; height: 72px;
-            border: 2px solid var(--cyan);
-            border-radius: 18px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 36px;
-            margin-bottom: 16px;
-            background: rgba(0,229,255,0.06);
-            box-shadow: 0 0 30px rgba(0,229,255,0.15), inset 0 0 20px rgba(0,229,255,0.05);
-            animation: pulse-border 2.5s ease-in-out infinite;
-        }
-        @keyframes pulse-border {
-            0%, 100% { box-shadow: 0 0 20px rgba(0,229,255,0.15); }
-            50%       { box-shadow: 0 0 40px rgba(0,229,255,0.35); }
-        }
-
-        .logo-text {
-            font-family: 'Space Mono', monospace;
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            color: #fff;
-        }
-        .logo-text span { color: var(--cyan); }
-
-        .tagline {
-            font-size: 13px;
-            color: var(--muted);
-            letter-spacing: 2px;
-            margin-top: 4px;
-            text-transform: uppercase;
-        }
-
-        /* ── PREVIEW DO MODELO ── */
-        .preview-card {
-            width: 100%;
-            border: 1px solid var(--border);
-            border-radius: 16px;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
             padding: 20px;
-            margin: 20px 0;
-            background: var(--surface);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            min-height: 80px;
-            position: relative;
-            overflow: hidden;
-        }
-        .preview-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-        }
-        .preview-icon {
-            width: 48px; height: 48px;
-            border-radius: 12px;
-            background: rgba(0,229,255,0.08);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 26px;
-            flex-shrink: 0;
-            border: 1px solid var(--border);
-        }
-        .preview-info { flex: 1; min-width: 0; }
-        .preview-title {
-            font-size: 12px;
-            color: var(--muted);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        .preview-name {
-            font-size: 15px;
-            font-weight: 600;
-            color: #fff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .preview-status {
-            font-size: 11px;
-            color: var(--cyan);
-            margin-top: 2px;
-        }
-
-        /* ── SEÇÕES ── */
-        .section-label {
-            width: 100%;
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: var(--muted);
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            margin-top: 8px;
-            padding-left: 4px;
-        }
-
-        /* ── BOTÕES ── */
-        .btn {
-            width: 100%;
-            padding: 15px 18px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: var(--text);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-            transition: all 0.2s;
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(0,229,255,0.06), transparent);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .btn:active { transform: scale(0.97); }
-        .btn:active::after { opacity: 1; }
-
-        .btn-icon {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            background: rgba(0,229,255,0.08);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-        .btn-content { flex: 1; }
-        .btn-title { font-size: 15px; color: #e2e8f0; font-weight: 600; }
-        .btn-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
-        .btn-arrow { color: var(--muted); font-size: 16px; }
-
-        .btn-start {
-            border-color: rgba(0,230,118,0.3);
-            background: rgba(0,230,118,0.07);
-            margin-top: 6px;
-        }
-        .btn-start .btn-icon { background: rgba(0,230,118,0.1); }
-        .btn-start .btn-title { color: var(--green); }
-        .btn-start:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .btn-revit { border-color: rgba(255, 160, 0, 0.25); }
-        .btn-revit .btn-icon { background: rgba(255,160,0,0.08); }
-
-        /* ── NOTA INFERIOR ── */
-        .footer-note {
-            font-size: 11px;
-            color: var(--muted);
-            text-align: center;
-            margin-top: 16px;
-            line-height: 1.6;
-        }
-        .footer-note a { color: var(--cyan); text-decoration: none; }
-
-        /* ── INPUTS OCULTOS ── */
-        input[type="file"] { display: none; }
-
-        /* ══════════════════════════════════════
-           MODO AR — camada de sobreposição
-        ══════════════════════════════════════ */
-
-        /* Botão Voltar */
-        #back-btn {
-            position: fixed;
-            top: 16px; left: 16px;
-            z-index: 150;
-            width: 48px; height: 48px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.25);
-            background: rgba(8,12,20,0.75);
-            backdrop-filter: blur(8px);
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            font-family: 'Space Mono', monospace;
-        }
-        #back-btn.visible { display: flex; }
-        #back-btn:active { transform: scale(0.9); background: rgba(0,229,255,0.25); }
-
-        /* Chip de status AR */
-        #ar-status {
-            position: fixed;
-            bottom: 32px; left: 50%;
-            transform: translateX(-50%);
-            z-index: 150;
-            background: rgba(8,12,20,0.8);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 10px 20px;
-            font-family: 'Space Mono', monospace;
-            font-size: 12px;
-            color: var(--cyan);
-            letter-spacing: 1px;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-        #ar-status.visible { display: flex; }
-        .status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--green);
-            animation: blink 1.2s ease-in-out infinite;
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
-
-        /* ══════════════════════════════════════
-           FIX DAS FAIXAS — abordagem definitiva
-           Centraliza + escala 105% para cobrir
-        ══════════════════════════════════════ */
-        video {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            min-width: 100vw !important;
-            min-height: 100vh !important;
-            width: auto !important;
-            height: auto !important;
-            transform: translate(-50%, -50%) !important;
-            object-fit: cover !important;
-            z-index: 0 !important;
-            background: transparent !important;
-        }
-
-        canvas {
-            position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 1 !important;
-            background: transparent !important;
-        }
-
-        a-scene {
-            position: fixed !important;
-            top: 0 !important; left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            max-width: 90vw;
+            line-height: 1.8;
         }
     </style>
 </head>
 <body>
 
-<!-- ══════ TELA PRINCIPAL ══════ -->
-<div id="menu">
-    <div class="menu-inner">
-
-        <div class="header">
-            <div class="logo-badge">🏗️</div>
-            <div class="logo-text">AR <span>CIVIL</span></div>
-            <div class="tagline">Realidade Aumentada · Projetos 3D</div>
-        </div>
-
-        <!-- Preview do modelo carregado -->
-        <div class="preview-card">
-            <div class="preview-icon" id="preview-icon">📦</div>
-            <div class="preview-info">
-                <div class="preview-title">Modelo 3D</div>
-                <div class="preview-name" id="preview-name">Nenhum arquivo selecionado</div>
-                <div class="preview-status" id="preview-status">Selecione um arquivo abaixo</div>
-            </div>
-        </div>
-
-        <!-- Buscar do celular -->
-        <div class="section-label">📂 Origem do modelo</div>
-
-        <button class="btn" onclick="document.getElementById('file-local').click()">
-            <div class="btn-icon">📁</div>
-            <div class="btn-content">
-                <div class="btn-title">Galeria / Arquivos do celular</div>
-                <div class="btn-desc">Busca .glb ou .gltf salvo no dispositivo</div>
-            </div>
-            <span class="btn-arrow">›</span>
-        </button>
-
-        <button class="btn btn-revit" onclick="document.getElementById('file-cad').click()">
-            <div class="btn-icon">📐</div>
-            <div class="btn-content">
-                <div class="btn-title">Importar do Revit / AutoCAD</div>
-                <div class="btn-desc">Exportar como .glb ou .gltf antes de importar</div>
-            </div>
-            <span class="btn-arrow">›</span>
-        </button>
-
-        <!-- Iniciar AR -->
-        <button class="btn btn-start" id="btn-start" disabled onclick="startAR()">
-            <div class="btn-icon">📷</div>
-            <div class="btn-content">
-                <div class="btn-title">Iniciar Realidade Aumentada</div>
-                <div class="btn-desc">Aponte para o marcador Hiro</div>
-            </div>
-        </button>
-
-        <div class="footer-note">
-            Revit: <strong>Exportar → Formato IFC → converter para GLB</strong><br>
-            AutoCAD: <strong>Exportar FBX → converter em gltf.report</strong><br>
-            <a href="https://gltf.report" target="_blank">gltf.report</a> converte grátis pelo navegador
-        </div>
-
-    </div>
+<div id="info">
+    <strong>🔧 TEST AR DEBUG</strong><br>
+    Status: <span id="status">Carregando...</span><br>
+    Câmera: <span id="camera-status">?</span><br>
+    A-Frame: <span id="aframe-status">?</span><br>
+    Marcador: <span id="marker-status">❌ Não detectado</span><br>
+    <br>
+    <button onclick="location.reload()" style="padding: 10px; background: #0f0; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">↻ Recarregar</button>
 </div>
 
-<!-- Inputs ocultos -->
-<input type="file" id="file-local" accept=".glb,.gltf" onchange="loadModel(this)">
-<input type="file" id="file-cad"   accept=".glb,.gltf" onchange="loadModel(this)">
-
-<!-- ══════ CONTROLES AR ══════ -->
-<button id="back-btn" onclick="goBack()">←</button>
-
-<div id="ar-status">
-    <span class="status-dot"></span>
-    <span id="status-text">Procurando marcador Hiro...</span>
-</div>
-
-<!-- ══════ CENA AR ══════ -->
-<a-scene
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; facingMode: environment;"
+<!-- CENA ULTRA SIMPLES -->
+<a-scene 
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
     vr-mode-ui="enabled: false"
-    renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true; clearColor: 0 0 0 0;"
-    background="transparent: true"
-    gesture-detector
-    id="ar-scene">
+    renderer="alpha: true;"
+    id="scene">
 
-    <a-assets id="ar-assets"></a-assets>
-
-    <!--
-        smooth="true"          → suaviza o rastreamento frame a frame
-        smoothCount="15"       → média dos últimos 15 frames = modelo "colado"
-        smoothTolerance="0.01" → tolerância de posição
-        smoothThreshold="5"    → limiar de rotação
-    -->
-    <a-marker
-        preset="hiro"
-        smooth="true"
-        smoothCount="15"
-        smoothTolerance="0.01"
-        smoothThreshold="5"
-        raycaster="objects: .clickable"
-        emitevents="true"
-        cursor="fuse: false; rayOrigin: mouse;"
-        id="ar-marker">
-
-        <a-entity
-            id="render-entity"
-            visible="true"
-            scale="1 1 1"
-            position="0 0 0"
-            rotation="0 0 0"
-            class="clickable"
-            gesture-handler>
-            <!-- Caixa de debug — mostra se a entidade está renderizando -->
-            <a-box id="debug-box" position="0 0 0" scale="0.1 0.1 0.1" color="#ff0000" opacity="0.7"></a-box>
-        </a-entity>
-
+    <!-- Marcador Hiro com APENAS uma caixa vermelha -->
+    <a-marker preset="hiro" id="marker">
+        <a-box position="0 0 0" scale="0.1 0.1 0.1" color="red"></a-box>
     </a-marker>
 
     <a-entity camera></a-entity>
 </a-scene>
 
 <script>
-    // ══════════════════════════════════════
-    // ESTADO DA APP
-    // ══════════════════════════════════════
-    let modelURL   = null;
-    let modelName  = '';
-    let isARMode   = false;
-
-    // ══════════════════════════════════════
-    // CARREGAMENTO DO MODELO
-    // ══════════════════════════════════════
-    function loadModel(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        modelName = file.name;
-        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-
-        // ✅ Usa blob URL — é mais rápido e funciona melhor no mobile que base64
-        // URL.createObjectURL cria uma referência em memória, sem precisar converter
-        if (modelURL) URL.revokeObjectURL(modelURL); // limpa anterior
-        
-        modelURL = URL.createObjectURL(file);
-
-        // Atualiza UI
-        document.getElementById('preview-icon').textContent   = '✅';
-        document.getElementById('preview-name').textContent   = file.name;
-        document.getElementById('preview-status').textContent = `${sizeMB} MB · pronto para AR`;
-        document.getElementById('preview-status').style.color = '#00e676';
-        document.getElementById('btn-start').disabled         = false;
-
-        console.log('[AR Civil] Modelo carregado:', file.name, '|', modelURL);
-
-        input.value = '';
+    // Log status
+    function updateStatus(field, value) {
+        const el = document.getElementById(field + '-status');
+        if (el) el.textContent = value;
     }
 
-    // ══════════════════════════════════════
-    // INICIAR AR
-    // ══════════════════════════════════════
-    function startAR() {
-        if (!modelURL) {
-            console.error('[AR Civil] modelURL está vazio!');
-            return;
-        }
-
-        const entity = document.getElementById('render-entity');
-
-        console.log('[AR Civil] Iniciando AR com modelo:', modelURL);
-        
-        // Aguarda um frame para garantir que tudo está pronto
-        requestAnimationFrame(() => {
-            entity.setAttribute('gltf-model', modelURL);
-            console.log('[AR Civil] setAttribute gltf-model executado');
-            
-            // Log do estado atual
-            setTimeout(() => {
-                console.log('[AR Civil] Visível?', entity.getAttribute('visible'));
-                console.log('[AR Civil] Modelo?', entity.getAttribute('gltf-model'));
-                console.log('[AR Civil] Escala?', entity.getAttribute('scale'));
-            }, 100);
-        });
-
-        // Transição para modo AR
-        document.getElementById('menu').classList.add('hidden');
-        document.getElementById('back-btn').classList.add('visible');
-        document.getElementById('ar-status').classList.add('visible');
-        isARMode = true;
-
-        // Inicia correção de vídeo
-        [200, 600, 1200, 2500].forEach(t => setTimeout(fixVideo, t));
+    // Verifica se A-Frame carregou
+    if (window.AFRAME) {
+        updateStatus('aframe', '✅ OK');
+    } else {
+        updateStatus('aframe', '❌ Erro');
     }
 
-    // ══════════════════════════════════════
-    // VOLTAR PARA MENU
-    // ══════════════════════════════════════
-    function goBack() {
-        document.getElementById('menu').classList.remove('hidden');
-        document.getElementById('back-btn').classList.remove('visible');
-        document.getElementById('ar-status').classList.remove('visible');
-        isARMode = false;
-    }
+    // Aguarda a cena carregar
+    const scene = document.getElementById('scene');
+    
+    scene.addEventListener('loaded', () => {
+        console.log('[TEST] Cena carregada');
+        updateStatus('status', '✅ Cena pronta');
+    });
 
-    // ══════════════════════════════════════
-    // STATUS DO MARCADOR (colada na tela)
-    // ══════════════════════════════════════
-    const marker       = document.getElementById('ar-marker');
-    const renderEntity = document.getElementById('render-entity');
-    const statusText   = document.getElementById('status-text');
-
-    // Quando o marcador é encontrado: mostra modelo
+    // Procura pelo marcador
+    const marker = document.getElementById('marker');
+    
     marker.addEventListener('markerFound', () => {
-        renderEntity.setAttribute('visible', 'true');
-        statusText.textContent = '✓ Marcador detectado';
-        document.querySelector('.status-dot').style.background = '#00e676';
-        console.log('[AR Civil] Marcador Hiro encontrado!');
+        console.log('[TEST] Marcador Hiro ENCONTRADO!');
+        updateStatus('marker', '✅ DETECTADO');
+        updateStatus('status', '✅✅ FUNCIONANDO!');
+        document.getElementById('info').style.background = 'rgba(0,0,0,0.8)';
     });
 
-    // Loga quando o modelo GLB termina de carregar
-    renderEntity.addEventListener('model-loaded', () => {
-        console.log('[AR Civil] Modelo 3D carregado com sucesso!');
-        statusText.textContent = 'Modelo carregado · aponte para Hiro';
-    });
-    renderEntity.addEventListener('model-error', (e) => {
-        console.error('[AR Civil] Erro ao carregar modelo:', e.detail);
-        statusText.textContent = '⚠ Erro ao carregar modelo';
-    });
-
-    // Quando perde o marcador: mantém o modelo na última posição
-    // (o smoothing já ajuda; aqui garantimos que fica visível)
     marker.addEventListener('markerLost', () => {
-        // Não esconde: o modelo fica "colado" na última posição conhecida
-        statusText.textContent = 'Mantendo posição...';
-        document.querySelector('.status-dot').style.background = '#ffab40';
+        console.log('[TEST] Marcador perdido');
+        updateStatus('marker', '❌ Perdido');
     });
 
-    // ══════════════════════════════════════
-    // FIX DAS FAIXAS BRANCAS
-    // Estratégia definitiva: centralizar o
-    // vídeo e usar min-width/min-height para
-    // garantir que cubra a tela sem faixas.
-    // ══════════════════════════════════════
-    function fixVideo() {
-        document.querySelectorAll('video').forEach(v => {
-            // Remove atributos inline que o AR.js impõe (ex: width="640")
-            v.removeAttribute('width');
-            v.removeAttribute('height');
-            v.style.cssText = `
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                min-width: 100vw !important;
-                min-height: 100vh !important;
-                width: auto !important;
-                height: auto !important;
-                transform: translate(-50%, -50%) !important;
-                object-fit: cover !important;
-                z-index: 0 !important;
-                background: transparent !important;
-            `;
+    // Verifica permissão de câmera
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(() => {
+            updateStatus('camera', '✅ OK');
+        })
+        .catch(err => {
+            updateStatus('camera', '❌ ' + err.name);
         });
 
-        // Força o canvas a preencher a tela também
-        document.querySelectorAll('canvas').forEach(c => {
-            c.style.cssText = `
-                position: fixed !important;
-                top: 0 !important; left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                z-index: 1 !important;
-                background: transparent !important;
-            `;
-        });
-
-        window.dispatchEvent(new Event('resize'));
-    }
-
-    // MutationObserver: age exatamente quando AR.js injeta o vídeo
-    const domObserver = new MutationObserver((mutations) => {
-        for (const m of mutations) {
-            for (const node of m.addedNodes) {
-                if (node.nodeName === 'VIDEO' || (node.querySelectorAll && node.querySelectorAll('video').length)) {
-                    fixVideo();
-                }
-            }
-        }
-        // Também observa atributos do vídeo (AR.js pode resetar width/height)
-        const video = document.querySelector('video');
-        if (video && (video.hasAttribute('width') || video.hasAttribute('height'))) {
-            fixVideo();
-        }
+    // Log de erros
+    window.addEventListener('error', (e) => {
+        console.error('[TEST ERROR]', e.error);
+        updateStatus('status', '❌ ' + e.error.message.substring(0, 30));
     });
 
-    domObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['width', 'height', 'style']
-    });
-
-    // Fallback no load
-    window.addEventListener('load', () => {
-        [300, 700, 1500, 3000].forEach(t => setTimeout(fixVideo, t));
-    });
-
-    // Re-aplica ao girar o celular
-    window.addEventListener('orientationchange', () => {
-        setTimeout(fixVideo, 400);
-    });
+    console.log('[TEST] Script rodando');
+    updateStatus('status', '⏳ Aguardando câmera...');
 </script>
+
 </body>
 </html>
