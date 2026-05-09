@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Civil 3D</title>
+    <title>Pedreiro 3D</title>
 
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pedreiro 3D">
+    <meta name="theme-color" content="#00d4ff">
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js">
     // ════ IMPRIMIR HIRO ════
     let selectedSizeCm = 5;
@@ -27,6 +34,16 @@
 
     function closePrint() {
         document.getElementById('print-frame').classList.remove('visible');
+    }
+
+
+    // ════ PWA SERVICE WORKER ════
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(() => console.log('[PWA] Service Worker registrado'))
+                .catch(err => console.log('[PWA] Erro:', err));
+        });
     }
 
 </script>
@@ -486,7 +503,7 @@
 <div id="menu">
     <div class="header">
         <div class="logo">🏗️</div>
-        <div class="title" style="background: linear-gradient(90deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">CIVIL 3D</div>
+        <div class="title" style="background: linear-gradient(90deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">PEDREIRO 3D</div>
         <div class="subtitle" style="color: #8899aa; letter-spacing: 2.5px;">Realidade Aumentada · Modelos 3D</div>
     </div>
 
@@ -560,7 +577,7 @@
             Pedreiro · Estudante de Engenharia Civil
         </div>
         <div style="font-size: 11px; color: rgba(0,229,255,0.45); margin-top: 10px; letter-spacing: 1px;">
-            © 2026 Civil 3D · Todos os direitos reservados
+            © 2026 Pedreiro 3D · Todos os direitos reservados
         </div>
 
     </div>
