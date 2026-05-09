@@ -16,6 +16,7 @@
         :root {
             --cyan: #00e5ff;
             --green: #00e676;
+            --orange: #ffab40;
             --bg: #080c14;
             --text: #cdd6f4;
             --muted: #45475a;
@@ -29,40 +30,49 @@
             color: var(--text);
         }
 
-        /* MENU */
+        /* ════ MENU ════ */
         #menu {
             position: fixed; inset: 0;
             z-index: 200;
             background: var(--bg);
             display: flex;
             flex-direction: column;
-            padding: 40px 24px;
+            padding: 40px 24px 60px;
             overflow-y: auto;
-            transition: opacity 0.3s;
         }
-        #menu.hidden { opacity: 0; pointer-events: none; }
+        #menu.hidden { display: none; }
 
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
-        .logo { font-size: 40px; margin-bottom: 10px; }
-        .title { font-size: 20px; font-weight: 700; margin-bottom: 5px; }
-        .subtitle { font-size: 12px; color: var(--muted); }
+        .logo { font-size: 48px; margin-bottom: 12px; }
+        .title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+        .subtitle { font-size: 12px; color: var(--muted); letter-spacing: 2px; }
+
+        .card {
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 14px;
+            padding: 20px;
+            margin: 24px 0;
+            background: rgba(0,229,255,0.05);
+        }
+
+        .card-title { font-weight: 700; margin-bottom: 8px; }
+        .card-text { font-size: 13px; color: var(--green); line-height: 1.6; }
 
         .section-label {
             font-size: 11px;
             letter-spacing: 2px;
             color: var(--muted);
             text-transform: uppercase;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin: 24px 0 12px 0;
         }
 
         .btn {
             width: 100%;
-            padding: 15px;
-            margin-bottom: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
             border: 1px solid rgba(0,229,255,0.2);
             border-radius: 12px;
             background: rgba(255,255,255,0.04);
@@ -72,49 +82,33 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
+        .btn span { flex: 1; }
         .btn:active { transform: scale(0.97); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .btn-start {
             border-color: rgba(0,230,118,0.3);
             background: rgba(0,230,118,0.07);
-            margin-top: 10px;
+            font-size: 16px;
+            margin-top: 8px;
         }
 
-        .preview {
-            border: 1px solid rgba(0,229,255,0.2);
-            border-radius: 12px;
-            padding: 15px;
-            margin: 20px 0;
-            background: rgba(0,229,255,0.05);
-            font-size: 13px;
+        .gesture-info {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 16px;
+            padding: 12px;
+            border-left: 2px solid var(--cyan);
+            padding-left: 14px;
             line-height: 1.6;
         }
-        .preview-title { font-weight: 700; margin-bottom: 8px; }
-        .preview-file { color: var(--green); }
 
-        /* LOG DE ERROS */
-        #error-log {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 999;
-            background: rgba(200,0,0,0.9);
-            border: 2px solid #ff4444;
-            border-radius: 8px;
-            padding: 15px;
-            color: #fff;
-            max-width: 300px;
-            font-size: 12px;
-            font-family: 'Courier New', monospace;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        #error-log.show { display: block; }
-
-        /* AR MODE */
+        /* ════ AR MODE ════ */
         #back-btn {
             position: fixed;
             top: 20px; left: 20px;
@@ -122,7 +116,8 @@
             width: 50px; height: 50px;
             border-radius: 50%;
             border: 2px solid rgba(255,255,255,0.3);
-            background: rgba(8,12,20,0.8);
+            background: rgba(8,12,20,0.85);
+            backdrop-filter: blur(8px);
             color: #fff;
             font-size: 20px;
             cursor: pointer;
@@ -130,27 +125,98 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            font-family: 'Space Mono', monospace;
         }
         #back-btn.visible { display: flex; }
-        #back-btn:active { transform: scale(0.9); }
+        #back-btn:active { transform: scale(0.9); background: rgba(0,229,255,0.25); }
 
+        /* ════ CONTROLES DE ZOOM ════ */
+        .zoom-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .zoom-controls.visible { display: flex; }
+
+        .zoom-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,229,255,0.3);
+            background: rgba(8,12,20,0.85);
+            backdrop-filter: blur(8px);
+            color: var(--cyan);
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:active { transform: scale(0.9); background: rgba(0,229,255,0.25); }
+
+        /* ════ STATUS ════ */
         #ar-status {
             position: fixed;
-            bottom: 30px; left: 50%;
+            bottom: 30px;
+            left: 50%;
             transform: translateX(-50%);
             z-index: 150;
-            background: rgba(8,12,20,0.85);
+            background: rgba(8,12,20,0.9);
+            backdrop-filter: blur(8px);
             border: 1px solid var(--cyan);
             border-radius: 20px;
-            padding: 12px 20px;
+            padding: 14px 24px;
             font-family: 'Courier New', monospace;
             font-size: 12px;
             color: var(--cyan);
             display: none;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
         }
-        #ar-status.visible { display: block; }
+        #ar-status.visible { display: flex; }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: blink 1.2s ease-in-out infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
 
-        /* VIDEO FIX */
+        /* ════ INSTRUÇÃO AR ════ */
+        #ar-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            background: rgba(8,12,20,0.9);
+            border: 2px solid var(--orange);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 90vw;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            pointer-events: none;
+        }
+        #ar-hint.hidden { display: none; }
+        #ar-hint-icon { font-size: 48px; }
+        #ar-hint-text { font-size: 16px; color: var(--orange); font-weight: 600; }
+
+        /* ════ VIDEO FIX ════ */
         video {
             position: fixed !important;
             top: 50% !important;
@@ -166,60 +232,87 @@
 
         canvas {
             position: fixed !important;
-            top: 0 !important; left: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
             width: 100% !important;
             height: 100% !important;
             z-index: 1 !important;
         }
+
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
 
-<!-- ════════ MENU ════════ -->
+<!-- ════ MENU ════ -->
 <div id="menu">
     <div class="header">
         <div class="logo">🏗️</div>
-        <div class="title">AR CIVIL</div>
-        <div class="subtitle">Realidade Aumentada · Projetos 3D</div>
+        <div class="title">Pedreiro Civil 3D</div>
+        <div class="subtitle">Realidade Aumentada · Modelos 3D</div>
     </div>
 
-    <div class="preview" id="preview">
-        <div class="preview-title">📦 Modelo carregado</div>
-        <div class="preview-file" id="model-name">Nenhum arquivo</div>
+    <div class="card">
+        <div class="card-title">📦 Modelo carregado</div>
+        <div class="card-text" id="model-name">Nenhum arquivo selecionado</div>
     </div>
 
     <div class="section-label">📂 Selecionar modelo</div>
     <button class="btn" onclick="document.getElementById('file-input').click()">
-        📁 Buscar GLB / GLTF do celular
+        <span>📁</span>
+        <span>Buscar GLB / GLTF</span>
     </button>
 
     <button class="btn btn-start" id="btn-start" disabled onclick="startAR()">
-        📷 Iniciar Realidade Aumentada
+        <span>📷</span>
+        <span>Iniciar Realidade Aumentada</span>
     </button>
 
-    <input type="file" id="file-input" accept=".glb,.gltf" style="display:none;">
+    <div class="gesture-info">
+        <strong>💡 Gestos na tela:</strong><br>
+        🖐️ Arrastar = mover<br>
+        👌 Pinça = zoom<br>
+        ➕➖ Botões = zoom rápido
+    </div>
+
+    <input type="file" id="file-input" accept=".glb,.gltf">
 </div>
 
-<!-- ════════ LOG DE ERROS ════════ -->
-<div id="error-log"></div>
-
-<!-- ════════ AR ════════ -->
+<!-- ════ AR CONTROLES ════ -->
 <button id="back-btn" onclick="goBack()">←</button>
-<div id="ar-status">⏳ Procurando marcador Hiro...</div>
 
-<!-- ════════ CENA A-FRAME ════════ -->
+<div class="zoom-controls" id="zoom-controls">
+    <button class="zoom-btn" onclick="zoomIn()">+</button>
+    <button class="zoom-btn" onclick="zoomOut()">−</button>
+</div>
+
+<div id="ar-status">
+    <span class="status-dot"></span>
+    <span id="status-text">Procurando marcador Hiro...</span>
+</div>
+
+<div id="ar-hint">
+    <div id="ar-hint-icon">🔍</div>
+    <div id="ar-hint-text">Aponte para o marcador Hiro</div>
+</div>
+
+<!-- ════ CENA A-FRAME ════ -->
 <a-scene
     arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
     vr-mode-ui="enabled: false"
-    renderer="alpha: true;"
+    renderer="alpha: true; antialias: true;"
+    gesture-detector
     id="ar-scene">
 
     <a-marker preset="hiro" id="hiro-marker" emitevents="true">
-        <!-- Caixa vermelha de teste — SEMPRE aparece para confirmar que funciona -->
-        <a-box id="test-box" position="0 0 0" scale="0.05 0.05 0.05" color="red"></a-box>
-        
-        <!-- O modelo GLB carregado dinamicamente vai aqui -->
-        <a-entity id="model-entity" scale="1 1 1" position="0 0 0"></a-entity>
+        <!-- Entidade do modelo com gesture-handler para pan e pinch -->
+        <a-entity 
+            id="model-entity"
+            scale="1 1 1"
+            position="0 0 0"
+            rotation="0 0 0"
+            gesture-handler>
+        </a-entity>
     </a-marker>
 
     <a-entity camera></a-entity>
@@ -227,55 +320,40 @@
 
 <script>
     let modelURL = null;
-    let modelFile = null;
+    let currentScale = 1;
+    const SCALE_STEP = 0.1;
+    const MIN_SCALE = 0.5;
+    const MAX_SCALE = 3;
 
-    // ════════ CARREGAMENTO DO MODELO ════════
+    // ════ CARREGAMENTO ════
     document.getElementById('file-input').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        modelFile = file;
         modelURL = URL.createObjectURL(file);
-
-        log(`Arquivo selecionado: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
-
-        document.getElementById('model-name').textContent = file.name;
+        document.getElementById('model-name').textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
         document.getElementById('btn-start').disabled = false;
 
         e.target.value = '';
     });
 
-    // ════════ INICIAR AR ════════
+    // ════ INICIAR AR ════
     function startAR() {
-        if (!modelURL) {
-            log('❌ Nenhum modelo selecionado');
-            return;
-        }
+        if (!modelURL) return;
 
-        log('Iniciando AR com:', modelURL.substring(0, 60) + '...');
-
-        // Esconde menu
         document.getElementById('menu').classList.add('hidden');
         document.getElementById('back-btn').classList.add('visible');
+        document.getElementById('zoom-controls').classList.add('visible');
         document.getElementById('ar-status').classList.add('visible');
+        document.getElementById('ar-hint').classList.remove('hidden');
 
-        // Aguarda um frame para garantir que A-Frame processou
+        // Carrega modelo
+        const entity = document.getElementById('model-entity');
+        entity.removeAttribute('gltf-model');
+
         requestAnimationFrame(() => {
-            const entity = document.getElementById('model-entity');
-            
-            // Remove qualquer modelo anterior
-            entity.removeAttribute('gltf-model');
-            
-            // Aguarda o próximo frame antes de setar
             requestAnimationFrame(() => {
                 entity.setAttribute('gltf-model', modelURL);
-                log('✓ gltf-model setAttribute executado');
-                
-                // Verifica o estado
-                setTimeout(() => {
-                    const gltf = entity.getAttribute('gltf-model');
-                    log('Modelo setado como:', gltf ? 'OK' : 'FALHOU');
-                }, 200);
             });
         });
 
@@ -283,14 +361,38 @@
         [200, 600, 1200, 2500].forEach(t => setTimeout(fixVideo, t));
     }
 
-    // ════════ VOLTAR ════════
+    // ════ VOLTAR ════
     function goBack() {
         document.getElementById('menu').classList.remove('hidden');
         document.getElementById('back-btn').classList.remove('visible');
+        document.getElementById('zoom-controls').classList.remove('visible');
         document.getElementById('ar-status').classList.remove('visible');
+        document.getElementById('ar-hint').classList.add('hidden');
+        currentScale = 1;
+        document.getElementById('model-entity').setAttribute('scale', '1 1 1');
     }
 
-    // ════════ FIX DE VÍDEO ════════
+    // ════ ZOOM ════
+    function zoomIn() {
+        if (currentScale < MAX_SCALE) {
+            currentScale += SCALE_STEP;
+            updateScale();
+        }
+    }
+
+    function zoomOut() {
+        if (currentScale > MIN_SCALE) {
+            currentScale -= SCALE_STEP;
+            updateScale();
+        }
+    }
+
+    function updateScale() {
+        const scale = currentScale.toFixed(2);
+        document.getElementById('model-entity').setAttribute('scale', `${scale} ${scale} ${scale}`);
+    }
+
+    // ════ FIX VÍDEO ════
     function fixVideo() {
         document.querySelectorAll('video').forEach(v => {
             v.removeAttribute('width');
@@ -298,62 +400,34 @@
         });
     }
 
-    // ════════ MARCADOR ════════
+    // ════ MARCADOR ════
     const marker = document.getElementById('hiro-marker');
-    const arStatus = document.getElementById('ar-status');
+    const statusText = document.getElementById('status-text');
+    const hintEl = document.getElementById('ar-hint');
+    const dotEl = document.querySelector('.status-dot');
 
     marker.addEventListener('markerFound', () => {
-        arStatus.textContent = '✓ Marcador detectado!';
-        log('✓ Marcador Hiro encontrado');
+        statusText.textContent = '✓ Marcador detectado!';
+        hintEl.classList.add('hidden');
+        dotEl.style.background = '#00e676';
     });
 
     marker.addEventListener('markerLost', () => {
-        arStatus.textContent = '⏳ Procurando marcador...';
-        log('⚠ Marcador perdido');
+        statusText.textContent = 'Procurando marcador...';
+        hintEl.classList.remove('hidden');
+        dotEl.style.background = '#ffab40';
     });
 
-    // ════════ MODELO GLB ════════
+    // ════ MODELO ════
     const modelEntity = document.getElementById('model-entity');
-    
+
     modelEntity.addEventListener('model-loaded', () => {
-        log('✅ MODELO CARREGADO COM SUCESSO!');
-        arStatus.textContent = '✓ Modelo carregado · Aponte para Hiro';
+        statusText.textContent = '✓ Modelo carregado!';
     });
 
-    modelEntity.addEventListener('model-error', (e) => {
-        const err = e.detail?.error?.message || 'Erro desconhecido';
-        log('❌ ERRO AO CARREGAR MODELO: ' + err);
-        arStatus.textContent = '❌ Erro ao carregar modelo';
+    modelEntity.addEventListener('model-error', () => {
+        statusText.textContent = '❌ Erro ao carregar';
     });
-
-    // ════════ LOG SYSTEM ════════
-    function log(msg) {
-        console.log('[AR CIVIL]', msg);
-        
-        const errorLog = document.getElementById('error-log');
-        const timestamp = new Date().toLocaleTimeString();
-        const line = document.createElement('div');
-        line.textContent = `[${timestamp}] ${msg}`;
-        errorLog.appendChild(line);
-        errorLog.classList.add('show');
-        
-        // Scroll para o final
-        errorLog.scrollTop = errorLog.scrollHeight;
-        
-        // Limita a 10 linhas
-        const lines = errorLog.querySelectorAll('div');
-        if (lines.length > 10) {
-            lines[0].remove();
-        }
-    }
-
-    // ════════ ERROS GLOBAIS ════════
-    window.addEventListener('error', (e) => {
-        log('❌ ' + (e.message || e.error));
-    });
-
-    console.log('AR Civil carregado');
-    log('App iniciada · Selecione um modelo GLB');
 </script>
 
 </body>
