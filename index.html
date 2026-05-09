@@ -193,7 +193,50 @@
             50% { opacity: 0.2; }
         }
 
+        /* ════ MODAL VOLTAR ════ */
+        #modal-back {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center;
+        }
+        #modal-back.visible { display: flex; }
+        .modal-box {
+            background: #0d1421;
+            border: 1px solid rgba(0,229,255,0.25);
+            border-radius: 20px;
+            padding: 30px 24px;
+            width: 88vw; max-width: 360px;
+            text-align: center;
+        }
+        .modal-icon { font-size: 44px; margin-bottom: 12px; }
+        .modal-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+        .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+        .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+        .modal-btn {
+            width: 100%; padding: 14px; border-radius: 12px;
+            font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .modal-btn:active { transform: scale(0.97); }
+        .modal-btn-off  { background: rgba(255,82,82,0.12); border: 1px solid rgba(255,82,82,0.4); color: #ff5252; }
+        .modal-btn-keep { background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.25); color: var(--cyan); }
+        .modal-btn-cancel { background: transparent; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
+        /* Indicador câmera */
+        #camera-indicator {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; color: var(--muted);
+            margin-top: 8px; padding: 10px 14px;
+            border-radius: 10px; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .cam-dot { width: 8px; height: 8px; border-radius: 50%; transition: background 0.3s; }
+        .cam-dot.on  { background: var(--green); animation: blink 1.2s ease-in-out infinite; }
+        .cam-dot.off { background: #ff5252; animation: none; }
+
         /* ════ INSTRUÇÃO AR ════ */
+
         #ar-hint {
             position: fixed;
             top: 50%;
@@ -268,6 +311,11 @@
         <span>Iniciar Realidade Aumentada</span>
     </button>
 
+    <div id="camera-indicator">
+        <span class="cam-dot off" id="cam-dot"></span>
+        <span id="cam-label">Câmera desligada · liga ao iniciar AR</span>
+    </div>
+
     <div class="gesture-info">
         <strong>💡 Gestos na tela:</strong><br>
         🖐️ Arrastar = mover<br>
@@ -279,7 +327,7 @@
 </div>
 
 <!-- ════ AR CONTROLES ════ -->
-<button id="back-btn" onclick="goBack()">←</button>
+<button id="back-btn" onclick="showBackModal()">←</button>
 
 <div class="zoom-controls" id="zoom-controls">
     <button class="zoom-btn" onclick="zoomIn()">+</button>
@@ -294,6 +342,26 @@
 <div id="ar-hint">
     <div id="ar-hint-icon">🔍</div>
     <div id="ar-hint-text">Aponte para o marcador Hiro</div>
+</div>
+
+<!-- ════ MODAL VOLTAR ════ -->
+<div id="modal-back">
+    <div class="modal-box">
+        <div class="modal-icon">📷</div>
+        <div class="modal-title">Sair do modo AR?</div>
+        <div class="modal-desc">Deseja desligar a câmera ao voltar?<br>Ela será ligada automaticamente ao iniciar novamente.</div>
+        <div class="modal-btns">
+            <button class="modal-btn modal-btn-off" onclick="goBack(true)">
+                📵 Voltar e desligar câmera
+            </button>
+            <button class="modal-btn modal-btn-keep" onclick="goBack(false)">
+                📷 Voltar sem desligar
+            </button>
+            <button class="modal-btn-cancel" onclick="closeBackModal()">
+                Continuar no AR
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- ════ CENA A-FRAME ════ -->
@@ -346,6 +414,18 @@
         document.getElementById('zoom-controls').classList.add('visible');
         document.getElementById('ar-status').classList.add('visible');
         document.getElementById('ar-hint').classList.remove('hidden');
+        setCameraStatus(true);
+
+        // Se câmera foi desligada, reinicia o stream
+        const video = document.querySelector('video');
+        if (video && !video.srcObject) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+                })
+                .catch(err => console.error('Erro ao religar câmera:', err));
+        }
 
         // Carrega modelo
         const entity = document.getElementById('model-entity');
@@ -361,8 +441,17 @@
         [200, 600, 1200, 2500].forEach(t => setTimeout(fixVideo, t));
     }
 
+    // ════ MODAL ════
+    function showBackModal() {
+        document.getElementById('modal-back').classList.add('visible');
+    }
+    function closeBackModal() {
+        document.getElementById('modal-back').classList.remove('visible');
+    }
+
     // ════ VOLTAR ════
-    function goBack() {
+    function goBack(turnOffCamera) {
+        closeBackModal();
         document.getElementById('menu').classList.remove('hidden');
         document.getElementById('back-btn').classList.remove('visible');
         document.getElementById('zoom-controls').classList.remove('visible');
@@ -370,6 +459,32 @@
         document.getElementById('ar-hint').classList.add('hidden');
         currentScale = 1;
         document.getElementById('model-entity').setAttribute('scale', '1 1 1');
+
+        if (turnOffCamera) {
+            stopCamera();
+        }
+    }
+
+    // ════ CÂMERA ════
+    function stopCamera() {
+        const video = document.querySelector('video');
+        if (video && video.srcObject) {
+            video.srcObject.getTracks().forEach(t => t.stop());
+            video.srcObject = null;
+        }
+        setCameraStatus(false);
+    }
+
+    function setCameraStatus(isOn) {
+        const dot   = document.getElementById('cam-dot');
+        const label = document.getElementById('cam-label');
+        if (isOn) {
+            dot.className = 'cam-dot on';
+            label.textContent = 'Câmera ligada · AR ativo';
+        } else {
+            dot.className = 'cam-dot off';
+            label.textContent = 'Câmera desligada · liga ao iniciar AR';
+        }
     }
 
     // ════ ZOOM ════
